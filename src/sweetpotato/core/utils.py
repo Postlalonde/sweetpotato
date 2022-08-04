@@ -3,25 +3,26 @@ Todo:
     * Implement mixins for custom component.
 """
 import json
-from dataclasses import dataclass
+from typing import Optional
 
 
-@dataclass
-class Prop:
-    values: dict
+class BaseProps:
+    def __init__(self, values: Optional[dict] = None):
+        self.values = values if values else {}
+        self.type = self.__class__.__name__.lower()
 
     def as_json(self):
         """Return dict as json."""
         return json.dumps(self.values)
 
 
-@dataclass
-class State(Prop):
+class BaseState(BaseProps):
     pass
 
 
 class CustomMixin:
     """Mixin methods for RootComponent"""
+
     extra_props: set = set()
 
     def __init__(self) -> None:

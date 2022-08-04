@@ -11,6 +11,7 @@ from sweetpotato.components import SafeAreaProvider
 from sweetpotato.config import settings
 from sweetpotato.core.base import App
 from sweetpotato.core.protocols import CompositeType
+from sweetpotato.management import State
 from sweetpotato.navigation import NavigationContainer
 from sweetpotato.ui_kitten import ApplicationProvider
 
@@ -136,9 +137,7 @@ class ContextWrapper(
         component = super().wrap(component, **kwargs)
         component = App(
             children=[component],
-            state={
-                "authenticated": False,
-            },
+            state=State({"authenticated": False, "beep": False}),
             extra_imports={
                 "react-native-gesture-handler": None,
                 "@eva-design/eva": "* as eva",

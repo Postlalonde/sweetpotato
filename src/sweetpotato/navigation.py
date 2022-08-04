@@ -9,6 +9,7 @@ from typing import Optional
 from sweetpotato.config import settings
 from sweetpotato.core.base import Composite, RootComponent
 from sweetpotato.core.protocols import CompositeVar
+from sweetpotato.management import State
 from sweetpotato.props.navigation_props import (
     NAVIGATION_CONTAINER_PROPS,
     ROOT_NAVIGATION_PROPS,
@@ -76,16 +77,18 @@ class Screen(RootComponent):
         self,
         screen_type: str,
         screen_name: str,
+        is_functional: bool,
         **kwargs,
     ) -> None:
+        self.is_functional = is_functional
         super().__init__(component_name=screen_name, **kwargs)
         self.screen_type = f"{screen_type}.{self._set_default_name()}"
         self.component_name = self.screen_type
 
+        self.is_functional = is_functional
+
     def __repr__(self) -> str:
-        children = (
-            f"{'{'}'{self.import_name}'{'}'}>{'{'}() => <{self.import_name}/> {'}'}"
-        )
+        children = f"{'{'}'{self.import_name}'{'}'}>{'{'}() => <{self.import_name} {self.attrs}/> {'}'}"
         return f"<{self.component_name} name={children}</{self.component_name}>"
 
 
@@ -123,12 +126,14 @@ class BaseNavigator(Composite):
         screen_name: str,
         children: CompositeVar,
         functions: Optional[list] = None,
-        state: Optional[dict[str, str]] = None,
+        state: Optional[State] = None,
+        is_functional: bool = False,
         extra_imports: Optional[dict[str, str]] = None,
     ) -> None:
         """Instantiates and adds screen to navigation component and increments screen count.
 
         Args:
+            is_functional: Boolean indicating whether screen is a functional component, default false.
             extra_imports: Any additional imports required by the screen file.
             screen_name: Name of screen component.
             children: List of child components.
@@ -143,6 +148,7 @@ class BaseNavigator(Composite):
                 children=children,
                 functions=functions,
                 state=state,
+                is_functional=is_functional,
                 extra_imports=extra_imports,
             )
         )

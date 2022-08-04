@@ -2,21 +2,24 @@ State management
 ======================
 
 
-:class:`~sweetpotato.core.utils.State`
+Usage steps to be added
+
+
+:class:`~sweetpotato.management.State`
 ***************************************
 
 .. code-block:: python
 
-   from sweetpotato.core.utils import State
+   from sweetpotato.management import State
 
-   state = State()
+   state = State({"isAuthenticated": False})
 
 
-:class:`~sweetpotato.core.utils.Props`
+:class:`~sweetpotato.management.Props`
 ***************************************
 
 .. code-block:: python
 
-   from sweetpotato.core.utils import Props
+   from sweetpotato.management import Props
 
-   props = Props()
+   props = Props({"isAuthenticated": False})

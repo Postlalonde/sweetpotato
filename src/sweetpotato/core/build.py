@@ -99,9 +99,9 @@ class Build:
 
         with io.BytesIO() as script:
 
-            def read(fd) -> bytes:
+            def read(file_d) -> bytes:
                 """ "IO helper function."""
-                data = os.read(fd, 1024)
+                data = os.read(file_d, 1024)
                 script.write(data)
                 return data
 

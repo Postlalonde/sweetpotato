@@ -1,5 +1,5 @@
 """Core functionality of React Native class based components."""
-import json
+from functools import singledispatchmethod
 from typing import Optional, Union
 
 from sweetpotato.config import settings
@@ -10,6 +10,7 @@ from sweetpotato.core.protocols import (
     CompositeType,
     ComponentType,
 )
+from sweetpotato.core.utils import BaseProps, BaseState
 
 
 class Component:
@@ -39,6 +40,7 @@ class Component:
         self,
         component_name: Optional[str] = None,
         children: Optional[str] = None,
+        state: Optional[dict[str, str]] = None,
         variables: Optional[list[str]] = None,
         **kwargs,
     ) -> None:
@@ -53,7 +55,8 @@ class Component:
         self._import_name = (
             component_name if component_name else self._set_default_name()
         )
-        self._attrs = kwargs
+        self._state = state if state else BaseState()
+        self._attrs = kwargs | {"state": self._state}
         self._children = children
         self._variables = variables if variables else []
         self.parent = settings.APP_COMPONENT
@@ -80,7 +83,36 @@ class Component:
     @property
     def attrs(self) -> Optional[str]:
         """Property string of given attributes for component"""
-        return "".join([f" {k}={'{'}{v}{'}'}" for k, v in self._attrs.items()])
+        return " ".join([self._format_attr(v, k) for k, v in self._attrs.items()])
+
+    def _make_attrs(self, attr: Union[BaseState, BaseProps]) -> str:
+        attr_type = f"this.{attr.type}"
+        return "".join(
+            [f"{k}={'{'}{attr_type}.{k}{'}'}" for k, v in attr.values.items()]
+        )
+
+    @singledispatchmethod
+    def _format_attr(self, attr, key) -> None:
+        """Generic method for formatting state, props & style.
+
+        Args:
+            key:
+            attr:
+        """
+        raise AttributeError(f"{key} not in allowed types")
+
+    @_format_attr.register(BaseState)
+    @_format_attr.register(BaseProps)
+    def _(self, attr: Union[BaseState, BaseProps], _) -> str:
+        return self._make_attrs(attr)
+
+    @_format_attr.register
+    def _(self, attr: dict, key: str) -> str:
+        return f"{key}={'{'}{attr}{'}'}"
+
+    @_format_attr.register
+    def _(self, attr: str, key: str) -> str:
+        return f"{key}={'{'}{attr}{'}'}"
 
     def _set_default_name(self) -> str:
         return self.__class__.__name__
@@ -168,19 +200,14 @@ class RootComponent(Composite):
 
     def __init__(
         self,
-        state: Optional[dict[str, str]] = None,
         extra_imports: Optional[dict[str, Union[str, set]]] = None,
         **kwargs,
     ) -> None:
-        if (
-            kwargs.get("component_name")
-            and len(kwargs.get("component_name").split(" ")) > 1
-        ):
+        if len(kwargs.get("component_name", "").split(" ")) > 1:
             kwargs["component_name"] = "".join(
                 [word.title() for word in kwargs.get("component_name").split(" ")]
             )
         super().__init__(**kwargs)
-        self._state = state if state else {}
         self.package = f"{self.package_root}/{self._import_name}.js"
         self._imports = {}
         self._set_parent(self._children)
@@ -205,7 +232,7 @@ class RootComponent(Composite):
     @property
     def state(self) -> Optional[str]:
         """Property returning json string of state (if any) belonging to given component."""
-        return json.dumps(self._state)
+        return self._state.as_json()
 
     def _set_parent(self, children: list[Union[CompositeType, ComponentType]]) -> None:
         """Sets top level component as root and sets each parent to self.
@@ -242,6 +269,7 @@ class RootComponent(Composite):
         return {
             "state": self.state,
             "variables": self.variables,
+            "functions": self.functions,
             "children": self.children,
             "imports": self.imports,
             "package": self.package,

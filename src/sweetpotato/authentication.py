@@ -12,6 +12,7 @@ from sweetpotato.components import (
 )
 from sweetpotato.components import Composite
 from sweetpotato.config import settings
+from sweetpotato.management import State
 from sweetpotato.navigation import create_native_stack_navigator
 
 
@@ -98,7 +99,7 @@ class AuthenticationProvider(Composite):
         stack = create_native_stack_navigator()
         stack.screen(
             functions=functions,
-            state={"username": "", "password": "", "secureTextEntry": True},
+            state=State({"username": "", "password": "", "secureTextEntry": True}),
             children=[View(**login_screen())],
             screen_name=login_screen_name,
             extra_imports={
