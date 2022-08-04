@@ -1,5 +1,4 @@
-<img src="https://raw.githubusercontent.com/greysonlalonde/sweetpotato/main/media/sweetpotato_github_banner.png" height=25% alt="">
-
+Sweetpotato 🥔
 -----
 [![alt text](https://img.shields.io/badge/pypi-0.6.a0-blue)](https://pypi.org/project/sweetpotato)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/sweetpotato)

@@ -1,35 +1,30 @@
 """
 Todo:
-    * Can refactor away from using abstract class.
+    * Implement mixins for custom component.
 """
-from abc import ABC, abstractmethod
-from typing import Union
-
-from sweetpotato.core.protocols import ComponentType, CompositeType
+import json
+from dataclasses import dataclass
 
 
-class Renderer(ABC):
-    """Interface for visitors."""
+@dataclass
+class Prop:
+    values: dict
 
-    @classmethod
-    @abstractmethod
-    def accept(cls, obj: Union[ComponentType, CompositeType]) -> None:
-        """Accepts a component and performs an action.
-
-        Args:
-            obj: Component instance.
-        """
-        raise NotImplementedError
+    def as_json(self):
+        """Return dict as json."""
+        return json.dumps(self.values)
 
 
-class ApplicationRenderer(Renderer):
-    """Accepts a top level component and performs all rendering."""
+@dataclass
+class State(Prop):
+    pass
 
-    @classmethod
-    def accept(cls, obj: CompositeType) -> None:
-        """Accepts a component and performs ....
 
-        Args:
-            obj: Component object.
-        """
-        ...
+class CustomMixin:
+    """Mixin methods for RootComponent"""
+    extra_props: set = set()
+
+    def __init__(self) -> None:
+        if self.extra_props:
+            # noinspection PyUnresolvedReferences
+            self.props.update(self.extra_props)  # pylint: disable=no-attribute

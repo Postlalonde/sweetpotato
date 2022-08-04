@@ -5,7 +5,6 @@ from typing import Optional, Union
 from sweetpotato.config import settings
 from sweetpotato.core import ThreadSafe
 from sweetpotato.core.protocols import (
-    RendererType,
     ComponentVar,
     CompositeVar,
     CompositeType,
@@ -32,8 +31,8 @@ class Component:
         component = Component(children="foo")
     """
 
-    package: str = "react-native"
-    props: set = {}  #: Set of allowed props for component.
+    package: str = "react-native"  #: Default package for component.
+    props: set = set()  #: Set of allowed props for component.
     is_composite: bool = False  #: Indicates whether component may have inner content.
 
     def __init__(
@@ -43,15 +42,17 @@ class Component:
         variables: Optional[list[str]] = None,
         **kwargs,
     ) -> None:
-        if set(kwargs.keys()).difference(self.props):
-            attributes = ", ".join(set(kwargs.keys()).difference(self.props))
-            raise AttributeError(
-                f"{self.import_name} component does not have attribute(s): {attributes}"
-            )
         self.component_name = (
             component_name if component_name else self._set_default_name()
         )
-        self._import_name = self.__class__.__name__
+        if set(kwargs.keys()).difference(self.props):
+            attributes = ", ".join(set(kwargs.keys()).difference(self.props))
+            raise AttributeError(
+                f"{self.component_name} component does not have attribute(s): {attributes}"
+            )
+        self._import_name = (
+            component_name if component_name else self._set_default_name()
+        )
         self._attrs = kwargs
         self._children = children
         self._variables = variables if variables else []
@@ -72,25 +73,17 @@ class Component:
         return self._children
 
     @property
-    def attrs(self) -> Optional[str]:
-        """Property string of given attributes for component"""
-        return "".join([f" {k}={'{'}{v}{'}'}" for k, v in self._attrs.items()])
-
-    @property
     def variables(self) -> Optional[str]:
         """Property returning string of variables (if any) belonging to given component."""
         return "\n".join(self._variables)
 
+    @property
+    def attrs(self) -> Optional[str]:
+        """Property string of given attributes for component"""
+        return "".join([f" {k}={'{'}{v}{'}'}" for k, v in self._attrs.items()])
+
     def _set_default_name(self) -> str:
         return self.__class__.__name__
-
-    def register(self, renderer: RendererType) -> None:
-        """Registers a specified visitor with component.
-
-        Args:
-            renderer: Renderer.
-        """
-        renderer.accept(self)
 
     def __repr__(self) -> str:
         if self._children:
@@ -140,17 +133,6 @@ class Composite(Component):
         """Property returning string of variables (if any) belonging to given component."""
         return "".join(self._functions)
 
-    def register(self, renderer: RendererType) -> None:
-        """Registers a specified renderer with component and child components.
-
-        Args:
-            renderer (Renderer): Renderer.
-        """
-        for child in self._children:
-            child.register(renderer)
-        if not self.is_context:
-            super().register(renderer)
-
 
 class ComponentRegistry(metaclass=ThreadSafe):
     _registry = {}
@@ -190,14 +172,16 @@ class RootComponent(Composite):
         extra_imports: Optional[dict[str, Union[str, set]]] = None,
         **kwargs,
     ) -> None:
+        if (
+            kwargs.get("component_name")
+            and len(kwargs.get("component_name").split(" ")) > 1
+        ):
+            kwargs["component_name"] = "".join(
+                [word.title() for word in kwargs.get("component_name").split(" ")]
+            )
         super().__init__(**kwargs)
         self._state = state if state else {}
-        self.import_name = (
-            "".join([word.title() for word in self.component_name.split(" ")])
-            if len(self.component_name.split(" ")) > 1
-            else self.component_name
-        )
-        self.package = f"{self.package_root}/{self.import_name}.js"
+        self.package = f"{self.package_root}/{self._import_name}.js"
         self._imports = {}
         self._set_parent(self._children)
         if extra_imports:
@@ -239,6 +223,30 @@ class RootComponent(Composite):
                 self._functions.append(child.functions)
                 self._variables.append(child.variables)
                 self._set_parent(child._children)
+
+    def serialize(self, as_format: Optional[str] = "dict") -> dict:
+        """Returns component as specified serialization format.
+
+        Args:
+            as_format: Specified format, one of `'json', `'dict'``, `'dict'` is default.
+
+        Returns:
+            Serialized component.
+
+        Todos:
+            * Add formatting logic for json.
+        """
+
+        if as_format == "json":
+            raise NotImplementedError
+        return {
+            "state": self.state,
+            "variables": self.variables,
+            "children": self.children,
+            "imports": self.imports,
+            "package": self.package,
+            "functional": self.is_functional,
+        }
 
 
 class App(RootComponent):

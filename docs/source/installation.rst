@@ -10,7 +10,7 @@ Install these dependencies if not present:
 1. `Node.js <https://nodejs.org/en/>`_
 2. `Git <https://git-scm.com>`_
 
-Enable `yarn <https://yarnpkg.com/getting-started/install>`_ through corepack and install `expo <https://docs.expo.dev/get-started/installation/>`_:
+Enable `yarn <https://yarnpkg.com/getting-started/install>`_ through corepack (included with Node.js) and install `expo <https://docs.expo.dev/get-started/installation/>`_:
 
 .. code-block:: console
 

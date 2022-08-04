@@ -19,6 +19,7 @@ Contents
     installation
     usage
     components
+    props_and_state
     plugins
     build
     api

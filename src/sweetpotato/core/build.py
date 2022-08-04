@@ -52,18 +52,8 @@ class Build:
         """
 
         platform = "" if not platform else platform
-        contents = {}
-
         for screen, content in cls.storage.registry.items():
-            contents[screen] = {}
-            contents[screen]["state"] = content.state
-            contents[screen]["variables"] = content.variables
-            contents[screen]["functions"] = content.functions
-            contents[screen]["children"] = content.children
-            contents[screen]["imports"] = content.imports
-            contents[screen]["package"] = content.package
-            contents[screen]["functional"] = content.is_functional
-            cls._write_screen(screen, contents[screen])
+            cls._write_screen(screen, content.serialize())
         cls.__format_screens()
         subprocess.run(
             f"cd {settings.REACT_NATIVE_PATH} && expo start {platform}",

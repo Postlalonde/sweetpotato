@@ -79,7 +79,7 @@ class Screen(RootComponent):
         **kwargs,
     ) -> None:
         super().__init__(component_name=screen_name, **kwargs)
-        self.screen_type = f"{screen_type}.{self.__class__.__name__}"
+        self.screen_type = f"{screen_type}.{self._set_default_name()}"
         self.component_name = self.screen_type
 
     def __repr__(self) -> str:

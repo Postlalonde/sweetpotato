@@ -29,7 +29,7 @@ class ActivityIndicator(Component):
     See https://reactnative.dev/docs/activityindicator.
     """
 
-    props: set = ACTIVITY_INDICATOR_PROPS
+    props: set = ACTIVITY_INDICATOR_PROPS  #: Set of allowed props for component.
 
 
 class Text(Component):
@@ -45,7 +45,7 @@ class Text(Component):
         text = Text(text="foo")
     """
 
-    props: set = TEXT_PROPS
+    props: set = TEXT_PROPS  #: Set of allowed props for component.
 
     def __init__(self, text: Optional[str] = None, **kwargs) -> None:
         super().__init__(children=text, **kwargs)
@@ -57,7 +57,7 @@ class TextInput(Component):
     See https://reactnative.dev/docs/textinput.
     """
 
-    props: set = TEXT_INPUT_PROPS
+    props: set = TEXT_INPUT_PROPS  #: Set of allowed props for component.
 
 
 class Button(Composite):
@@ -73,7 +73,7 @@ class Button(Composite):
         button = Button(title="foo")
     """
 
-    props: set = BUTTON_PROPS
+    props: set = BUTTON_PROPS  #: Set of allowed props for component.
 
     def __init__(self, **kwargs) -> None:
         title = kwargs.update({"title": f"'{kwargs.pop('title', '')}'"})
@@ -91,7 +91,7 @@ class Image(Component):
         image = Image(source={"uri": image_source})
     """
 
-    props: set = IMAGE_PROPS
+    props: set = IMAGE_PROPS  #: Set of allowed props for component.
 
 
 class FlatList(Component):
@@ -100,7 +100,7 @@ class FlatList(Component):
     See https://reactnative.dev/docs/flatlist.
     """
 
-    props: set = FLAT_LIST_PROPS
+    props: set = FLAT_LIST_PROPS  #: Set of allowed props for component.
 
 
 class SafeAreaProvider(Composite):
@@ -109,8 +109,8 @@ class SafeAreaProvider(Composite):
     See https://docs.expo.dev/versions/latest/sdk/safe-area-context/.
     """
 
-    package: str = "react-native-safe-area-context"
-    props: set = SAFE_AREA_PROVIDER_PROPS
+    package: str = "react-native-safe-area-context"  #: Default package for component.
+    props: set = SAFE_AREA_PROVIDER_PROPS  #: Set of allowed props for component.
 
 
 class ScrollView(Component):
@@ -119,7 +119,7 @@ class ScrollView(Component):
     See https://reactnative.dev/docs/scrollview.
     """
 
-    props: set = SCROLL_VIEW_PROPS
+    props: set = SCROLL_VIEW_PROPS  #: Set of allowed props for component.
 
 
 class StyleSheet:
@@ -169,7 +169,7 @@ class TouchableOpacity(Composite):
     See https://reactnative.dev/docs/touchableopacity.
     """
 
-    props: set = TOUCHABLE_OPACITY_PROPS
+    props: set = TOUCHABLE_OPACITY_PROPS  #: Set of allowed props for component.
 
 
 class View(Composite):
@@ -178,4 +178,4 @@ class View(Composite):
     See https://reactnative.dev/docs/view.
     """
 
-    props: set = VIEW_PROPS
+    props: set = VIEW_PROPS  #: Set of allowed props for component.

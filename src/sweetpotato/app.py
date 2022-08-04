@@ -9,7 +9,6 @@ from sweetpotato.components import View
 from sweetpotato.core.build import Build
 from sweetpotato.core.context_wrappers import ContextWrapper
 from sweetpotato.core.protocols import CompositeVar, BuildVar, ContextWrapperVar
-from sweetpotato.core.utils import ApplicationRenderer
 
 
 def default_screen() -> CompositeVar:
@@ -50,7 +49,7 @@ class App:
         self._build = Build() if not build else build
         self._context.wrap(
             component if component else default_screen(), theme=theme, **kwargs
-        ).register(renderer=ApplicationRenderer)
+        )
 
     def run(self, platform: Optional[str] = None) -> None:
         """Starts a React Native expo client through a subprocess.
