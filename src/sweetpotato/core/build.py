@@ -44,17 +44,21 @@ class Build:
                 raise ImportError(f"Dependency package {dependency} not found.")
 
     @classmethod
-    def run(cls, platform: Optional[str] = None) -> None:
+    def write_files(cls) -> None:
+        """Writes out .js files for application."""
+
+        for screen, content in cls.storage.registry.items():
+            cls._write_screen(screen, content.serialize())
+        cls.__format_screens()
+
+    @classmethod
+    def run(cls, platform: Optional[str] = "") -> None:
         """Starts a React Native expo client through a subprocess.
 
         Args:
             platform: Platform for expo to run on.
         """
-
-        platform = "" if not platform else platform
-        for screen, content in cls.storage.registry.items():
-            cls._write_screen(screen, content.serialize())
-        cls.__format_screens()
+        cls.write_files()
         subprocess.run(
             f"cd {settings.REACT_NATIVE_PATH} && expo start {platform}",
             shell=True,
@@ -122,7 +126,7 @@ class Build:
             Implement verbose argument.
         """
         if not verbose:
-            return self.storage.registry
+            return self.storage.registry[settings.APP_COMPONENT]
         raise NotImplementedError
 
     @staticmethod
@@ -172,6 +176,9 @@ class Build:
         if settings.APP_COMPONENT != screen:
             component = component.replace("default", "")
         for key in content:
+            if key == "props" and content[key]:
+                component = component.replace(f"<{key.upper()}>", "{props}")
+            print(key, content[key], screen)
             component = component.replace(f"<{key.upper()}>", str(content[key]))
         return component
 

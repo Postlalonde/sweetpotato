@@ -2,8 +2,7 @@ Components
 ==========
 
 .. toctree::
-    components_list
-    custom_component
-    props_and_state
+    components_src/components_list
+    components_src/custom_component
 
 

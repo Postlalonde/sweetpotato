@@ -7,7 +7,6 @@ Todo:
 """
 from typing import Optional, Union
 
-from sweetpotato.config import settings
 from sweetpotato.core.base import Component, Composite
 from sweetpotato.props.components_props import (
     ACTIVITY_INDICATOR_PROPS,
@@ -65,21 +64,11 @@ class Button(Composite):
 
     See https://reactnative.dev/docs/button.
 
-    Keyword Args:
-        title: Title for button.
-        kwargs: Arbitrary allowed props for component.
-
     Example:
         button = Button(title="foo")
     """
 
     props: set = BUTTON_PROPS  #: Set of allowed props for component.
-
-    def __init__(self, **kwargs) -> None:
-        title = kwargs.update({"title": f"'{kwargs.pop('title', '')}'"})
-        if settings.USE_UI_KITTEN:
-            kwargs.update({"children": title})
-        super().__init__(**kwargs)
 
 
 class Image(Component):

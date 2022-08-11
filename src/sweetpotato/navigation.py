@@ -27,10 +27,14 @@ class RootNavigation(RootComponent):
     so that we don't have to pass the prop between screens.
     """
 
-    is_functional = True
-    is_composite = False
-    is_context = True
-    props: set = ROOT_NAVIGATION_PROPS
+    is_functional: bool = (
+        True  #: Indicates whether component a functional or class component.
+    )
+    is_composite: bool = False  #: Indicates whether component may have inner content.
+    is_context: bool = (
+        True  #: Indicates whether component is a context, similar to an inline if-else.
+    )
+    props: set = ROOT_NAVIGATION_PROPS  #: Set of allowed props for component.
 
     def __init__(self, **kwargs):
         super().__init__(
@@ -53,8 +57,8 @@ class RootNavigation(RootComponent):
 class NavigationContainer(Composite):
     """React Navigation NavigationContainer component."""
 
-    package: str = "@react-navigation/native"
-    props: set = NAVIGATION_CONTAINER_PROPS
+    package: str = "@react-navigation/native"  #: Default package for component.
+    props: set = NAVIGATION_CONTAINER_PROPS  #: Set of allowed props for component.
 
 
 class Screen(RootComponent):
@@ -69,9 +73,11 @@ class Screen(RootComponent):
         screen_type: Navigator name/type prefix, shown as {screen_name}.Screen.
     """
 
-    package_root: str = f"./{settings.SOURCE_FOLDER}/screens"
-    props: set = SCREEN_PROPS
-    is_composite = False
+    package_root: str = (
+        f"./{settings.SOURCE_FOLDER}/screens"  #: Default package for component.
+    )
+    props: set = SCREEN_PROPS  #: Set of allowed props for component.
+    is_composite = False  #: Indicates whether component may have inner content.
 
     def __init__(
         self,
@@ -106,7 +112,7 @@ class BaseNavigator(Composite):
         * Add specific props from React Navigation.
     """
 
-    props: set = BASE_NAVIGATOR_PROPS
+    props: set = BASE_NAVIGATOR_PROPS  #: Set of allowed props for component.
 
     def __init__(self, name: str = None, **kwargs) -> None:
         super().__init__(component_name=self._set_custom_name(name), **kwargs)
@@ -120,6 +126,7 @@ class BaseNavigator(Composite):
             component_name = name.split(".")
             component_name[0] = name
             return (".".join(component_name)).title()
+        return name
 
     def screen(
         self,
@@ -160,9 +167,9 @@ class Stack(BaseNavigator):
     See https://reactnavigation.org/docs/stack-navigator
     """
 
-    import_name: str = "createNativeStackNavigator"
-    package: str = "@react-navigation/native-stack"
-    props: set = NATIVE_STACK_NAVIGATOR_PROPS
+    import_name: str = "createNativeStackNavigator"  #: Name of component import.
+    package: str = "@react-navigation/native-stack"  #: Default package for component.
+    props: set = NATIVE_STACK_NAVIGATOR_PROPS  #: Set of allowed props for component.
 
 
 class Tab(BaseNavigator):
@@ -171,19 +178,19 @@ class Tab(BaseNavigator):
     See https://reactnavigation.org/docs/bottom-tab-navigator
     """
 
-    import_name: str = "createBottomTabNavigator"
-    package: str = "@react-navigation/bottom-tabs"
-    props: set = BOTTOM_TAB_NAVIGATOR_PROPS
+    import_name: str = "createBottomTabNavigator"  #: Name of component import.
+    package: str = "@react-navigation/bottom-tabs"  #: Default package for component.
+    props: set = BOTTOM_TAB_NAVIGATOR_PROPS  #: Set of allowed props for component.
 
 
 def create_bottom_tab_navigator(name: Optional[str] = None) -> Tab:
     """Function representing the createBottomTabNavigator function in react-navigation.
 
     Args:
-        name: name of navigator.
+        name: name of navigator, this is necessary if there are multiple navigators in the same app.
 
     Returns:
-        Tab navigator.
+        Tab navigator object with specified name, if passed.
     """
     return Tab(name=name)
 
@@ -192,9 +199,9 @@ def create_native_stack_navigator(name: Optional[str] = None) -> Stack:
     """Function representing the createNativeStackNavigator function in react-navigation.
 
     Args:
-        name: name of navigator.
+        name: name of navigator, this is necessary if there are multiple navigators in the same app.
 
     Returns:
-        Stack navigator.
+        Stack navigator object with specified name, if passed.
     """
     return Stack(name=name)

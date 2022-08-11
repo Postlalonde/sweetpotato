@@ -21,8 +21,8 @@ class IconRegistry(Component):
     See `<https://akveo.github.io/react-native-ui-kitten/docs/components/icon/overview#icon>`_
     """
 
-    package: str = "@ui-kitten/components"
-    props: set = ICON_REGISTRY_PROPS
+    package: str = "@ui-kitten/components"  #: Default package for component.
+    props: set = ICON_REGISTRY_PROPS  #: Set of allowed props for component.
 
 
 class ApplicationProvider(Composite):
@@ -34,8 +34,8 @@ class ApplicationProvider(Composite):
         kwargs: Arbitrary keyword arguments.
     """
 
-    props: set = APPLICATION_PROVIDER_PROPS
-    package: str = "@ui-kitten/components"
+    package: str = "@ui-kitten/components"  #: Default package for component.
+    props: set = APPLICATION_PROVIDER_PROPS  #: Set of allowed props for component.
 
     def __init__(self, **kwargs) -> None:
         kwargs.update(
@@ -49,7 +49,7 @@ class ApplicationProvider(Composite):
         super().__init__(**kwargs)
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} {'{'}...eva{'}'}{self.attrs}>{self.children}</{self.__class__.__name__}>"
+        return f"<{self._import_name} {'{'}...eva{'}'}{self.attrs}>{self.children}</{self._import_name}>"
 
 
 class Text(Component):
@@ -58,7 +58,8 @@ class Text(Component):
     See https://akveo.github.io/react-native-ui-kitten/docs/components/text.
     """
 
-    props: set = TEXT_PROPS
+    package: str = "@ui-kitten/components"  #: Default package for component.
+    props: set = TEXT_PROPS  #: Set of allowed props for component.
 
     def __init__(self, text: Optional[str] = None, **kwargs) -> None:
         super().__init__(children=text, **kwargs)
@@ -70,8 +71,8 @@ class Button(Composite):
     See https://akveo.github.io/react-native-ui-kitten/docs/components/button.
     """
 
-    package: str = "@ui-kitten/components"
-    props: set = BUTTON_PROPS
+    package: str = "@ui-kitten/components"  #: Default package for component.
+    props: set = BUTTON_PROPS  #: Set of allowed props for component.
 
     def __init__(self, **kwargs) -> None:
         super().__init__(children=[Text(text=kwargs.pop("title"))], **kwargs)
@@ -83,8 +84,8 @@ class Input(Component):
     See https://akveo.github.io/react-native-ui-kitten/docs/components/input.
     """
 
-    package: str = "@ui-kitten/components"
-    props: set = INPUT_PROPS
+    package: str = "@ui-kitten/components"  #: Default package for component.
+    props: set = INPUT_PROPS  #: Set of allowed props for component.
 
 
 class Layout(Composite):
@@ -93,5 +94,5 @@ class Layout(Composite):
     See https://akveo.github.io/react-native-ui-kitten/docs/components/layout.
     """
 
-    package: str = "@ui-kitten/components"
-    props: set = LAYOUT_PROPS
+    package: str = "@ui-kitten/components"  #: Default package for component.
+    props: set = LAYOUT_PROPS  #: Set of allowed props for component.

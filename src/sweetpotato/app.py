@@ -1,14 +1,15 @@
 """Provider for React Native entry.
 
-Todo:
+Todos:
     * Add module docstrings
 """
 from typing import Optional
 
 from sweetpotato.components import View
+from sweetpotato.core.base_management import BaseState
 from sweetpotato.core.build import Build
 from sweetpotato.core.context_wrappers import ContextWrapper
-from sweetpotato.core.protocols import CompositeVar, BuildVar, ContextWrapperVar
+from sweetpotato.core.protocols import CompositeVar
 
 
 def default_screen() -> CompositeVar:
@@ -40,15 +41,19 @@ class App:
     def __init__(
         self,
         component: Optional[CompositeVar] = None,
-        context: Optional[ContextWrapperVar] = None,
-        build: Optional[BuildVar] = None,
+        context: Optional[ContextWrapper] = ContextWrapper(),
+        build: Optional[Build] = Build(),
         theme: Optional[str] = None,
+        state: Optional[BaseState] = None,
         **kwargs
     ) -> None:
-        self._context = ContextWrapper() if not context else context
-        self._build = Build() if not build else build
+        self._context = context
+        self._build = build
         self._context.wrap(
-            component if component else default_screen(), theme=theme, **kwargs
+            component if component else default_screen(),
+            theme=theme,
+            state=state,
+            **kwargs
         )
 
     def run(self, platform: Optional[str] = None) -> None:
@@ -66,6 +71,10 @@ class App:
             platform: Platform for app to be published on.
         """
         self._build.publish(platform=platform)
+
+    def write_files(self) -> None:
+        """Writes js files without running the application."""
+        self._build.write_files()
 
     def show(self) -> str:
         """Returns string .js rendition of application.

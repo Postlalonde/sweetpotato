@@ -38,7 +38,7 @@ import React from 'react';
 
 <VARIABLES>
 
-export function <NAME>() {
+export function <NAME>(<PROPS>) {
     <FUNCTIONS>
 
     return (

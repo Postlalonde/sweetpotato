@@ -5,4 +5,4 @@ Plugins
 .. toctree::
     :maxdepth: 2
 
-    authentication_plugin
+    plugins_src/authentication_plugin

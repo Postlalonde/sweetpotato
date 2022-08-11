@@ -4,12 +4,13 @@ Todo:
     * Add typing.
 """
 from abc import abstractmethod, ABC
-from typing import Union
+from typing import Union, Optional
 
 from sweetpotato.authentication import AuthenticationProvider
 from sweetpotato.components import SafeAreaProvider
 from sweetpotato.config import settings
 from sweetpotato.core.base import App
+from sweetpotato.core.base_management import BaseState
 from sweetpotato.core.protocols import CompositeType
 from sweetpotato.management import State
 from sweetpotato.navigation import NavigationContainer
@@ -124,6 +125,8 @@ class ContextWrapper(
     def wrap(
         self,
         component: Union[CompositeType, None],
+        state: Optional[BaseState] = None,
+        is_functional: Optional[bool] = False,
         **kwargs,
     ) -> "App":
         """Checks and wraps component in provided wrappers, if configured.
@@ -134,15 +137,27 @@ class ContextWrapper(
         Returns:
             Composite.
         """
-        component = super().wrap(component, **kwargs)
-        component = App(
-            children=[component],
-            state=State({"authenticated": False, "beep": False}),
-            extra_imports={
-                "react-native-gesture-handler": None,
-                "@eva-design/eva": "* as eva",
-                "@ui-kitten/eva-icons": {"EvaIconsPack"},
-                "./src/components/RootNavigation": "* as RootNavigation",
-            },
-        )
+        if not state:
+            state = State(
+                {
+                    "authenticated": False,
+                }
+            )
+
+        component = App(children=[super().wrap(component, **kwargs)])
+        extra_imports = {}
+        if settings.USE_NAVIGATION:
+            extra_imports.update(
+                {
+                    "react-native-gesture-handler": None,
+                    "./src/components/RootNavigation": "* as RootNavigation",
+                }
+            )
+        if settings.USE_UI_KITTEN:
+            extra_imports.update(
+                {
+                    "@eva-design/eva": "* as eva",
+                    "@ui-kitten/eva-icons": {"EvaIconsPack"},
+                }
+            )
         return component

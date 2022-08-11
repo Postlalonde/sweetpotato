@@ -1,16 +1,17 @@
 """Core functionality of React Native class based components."""
+import json
 from functools import singledispatchmethod
 from typing import Optional, Union
 
 from sweetpotato.config import settings
 from sweetpotato.core import ThreadSafe
+from sweetpotato.core.base_management import BaseProps, BaseState
 from sweetpotato.core.protocols import (
     ComponentVar,
     CompositeVar,
     CompositeType,
     ComponentType,
 )
-from sweetpotato.core.utils import BaseProps, BaseState
 
 
 class Component:
@@ -33,14 +34,18 @@ class Component:
     """
 
     package: str = "react-native"  #: Default package for component.
-    props: set = set()  #: Set of allowed props for component.
+    props: set = {
+        "state",
+        "props",
+    }  #: Set of allowed props for component, default `'state'`, `'props'`.
     is_composite: bool = False  #: Indicates whether component may have inner content.
 
     def __init__(
         self,
         component_name: Optional[str] = None,
         children: Optional[str] = None,
-        state: Optional[dict[str, str]] = None,
+        state: Optional[BaseState] = BaseState(),
+        props: Optional[BaseProps] = BaseProps(),
         variables: Optional[list[str]] = None,
         **kwargs,
     ) -> None:
@@ -55,11 +60,13 @@ class Component:
         self._import_name = (
             component_name if component_name else self._set_default_name()
         )
-        self._state = state if state else BaseState()
-        self._attrs = kwargs | {"state": self._state}
+
         self._children = children
+        self._state = state
+        self._props = props
         self._variables = variables if variables else []
         self.parent = settings.APP_COMPONENT
+        self._attrs = kwargs
 
     @property
     def import_name(self) -> Optional[str]:
@@ -86,8 +93,9 @@ class Component:
         return " ".join([self._format_attr(v, k) for k, v in self._attrs.items()])
 
     def _make_attrs(self, attr: Union[BaseState, BaseProps]) -> str:
-        attr_type = f"this.{attr.type}"
-        return "".join(
+        placeholder = "" if self.is_composite else "this."
+        attr_type = f"{placeholder}{attr.type}"
+        return " ".join(
             [f"{k}={'{'}{attr_type}.{k}{'}'}" for k, v in attr.values.items()]
         )
 
@@ -96,23 +104,23 @@ class Component:
         """Generic method for formatting state, props & style.
 
         Args:
-            key:
-            attr:
+            key: ...
+            attr: ...
         """
-        raise AttributeError(f"{key} not in allowed types")
+        raise AttributeError(f"{attr} {key} not in allowed types")
 
     @_format_attr.register(BaseState)
     @_format_attr.register(BaseProps)
     def _(self, attr: Union[BaseState, BaseProps], _) -> str:
         return self._make_attrs(attr)
 
-    @_format_attr.register
+    @_format_attr.register(str)
     def _(self, attr: dict, key: str) -> str:
         return f"{key}={'{'}{attr}{'}'}"
 
     @_format_attr.register
-    def _(self, attr: str, key: str) -> str:
-        return f"{key}={'{'}{attr}{'}'}"
+    def _(self, attr: bool, key: str) -> str:
+        return f"{key}={'{'}{json.dumps(attr)}{'}'}"
 
     def _set_default_name(self) -> str:
         return self.__class__.__name__
@@ -141,7 +149,7 @@ class Composite(Component):
         composite = Composite(children=[])
     """
 
-    is_context: bool = False  #: Indicates whether component is a context, similar to an inline if else.
+    is_context: bool = False  #: Indicates whether component is a context, similar to an inline if-else.
     is_composite: bool = True  #: Indicates whether component may have inner components.
     is_root: bool = False  #: Indicates whether component is a top level component.
 
@@ -165,17 +173,38 @@ class Composite(Component):
         """Property returning string of variables (if any) belonging to given component."""
         return "".join(self._functions)
 
+    def __repr__(self) -> str:
+        if self._children and self.is_composite:
+            return f"<{self.component_name} {self.attrs}>{self.children}</{self.component_name}>"
+        return f"<{self.component_name} {self.attrs}/>"
+
 
 class ComponentRegistry(metaclass=ThreadSafe):
+    """Registry of components in React Native tree.
+
+    Todos:
+        * Complete docstrings for class + methods.
+    """
+
     _registry = {}
 
     @classmethod
     @property
     def registry(cls):
+        """
+
+        Returns:
+
+        """
         return cls._registry
 
     @classmethod
     def register(cls, component):
+        """
+
+        Args:
+            component:
+        """
         if component.component_name not in cls._registry.keys():
             cls._registry[component.component_name] = component
 
@@ -192,6 +221,7 @@ class RootComponent(Composite):
         import_name: Name of .js class/function/const for component import.
     """
 
+    is_composite = False  #: Indicates whether component is represented as composite inside parent component.
     package_root: str = f"./{settings.SOURCE_FOLDER}/components"
     is_root: bool = True  #: Indicates whether component is a top level component.
     is_functional: bool = (
@@ -208,6 +238,8 @@ class RootComponent(Composite):
                 [word.title() for word in kwargs.get("component_name").split(" ")]
             )
         super().__init__(**kwargs)
+        if self._state.functions:
+            self._functions.extend(self._state.functions)
         self.package = f"{self.package_root}/{self._import_name}.js"
         self._imports = {}
         self._set_parent(self._children)
@@ -274,10 +306,22 @@ class RootComponent(Composite):
             "imports": self.imports,
             "package": self.package,
             "functional": self.is_functional,
+            "props": self.props,
         }
+
+    @classmethod
+    def register(cls, obj: Union[BaseState, BaseProps]) -> None:
+        """Registers state/prop object as functional or class based.
+
+        Args:
+            obj: State or Prop object.
+        """
+        obj.is_functional = cls.is_functional
 
 
 class App(RootComponent):
+    """Expo entry class."""
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.package = f"{settings.REACT_NATIVE_PATH}/{self.import_name}.js"

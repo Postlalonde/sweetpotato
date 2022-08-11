@@ -92,7 +92,6 @@ class Settings(metaclass=ThreadSafe):
     @classmethod
     def __set_ui_kitten(cls) -> None:
         """Sets all necessary UI Kitten configuration for app."""
-        ...
 
     @classmethod
     def __set_navigation(cls) -> None:
@@ -100,7 +99,6 @@ class Settings(metaclass=ThreadSafe):
         # cls.APP_IMPORTS.add(
         #     "\nimport * as RootNavigation from './src/components/RootNavigation.js';"
         # )\
-        ...
 
     @classmethod
     def __set_api(cls) -> None:
