@@ -19,7 +19,7 @@ Contents
     installation
     usage
     components
-    props_and_state
+    state_management
     plugins
     build
     api

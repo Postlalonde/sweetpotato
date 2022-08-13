@@ -9,10 +9,10 @@ from typing import Union, Optional
 from sweetpotato.authentication import AuthenticationProvider
 from sweetpotato.components import SafeAreaProvider
 from sweetpotato.config import settings
+from sweetpotato.core import js_utils
 from sweetpotato.core.base import App
-from sweetpotato.core.base_management import BaseState
+from sweetpotato.core.base_management import State
 from sweetpotato.core.protocols import CompositeType
-from sweetpotato.management import State
 from sweetpotato.navigation import NavigationContainer
 from sweetpotato.ui_kitten import ApplicationProvider
 
@@ -43,7 +43,7 @@ class UIKittenWrapper(Wrapper):
             if not theme:
                 raise KeyError("UI Kitten must be provided a theme.")
             component = ApplicationProvider(
-                children=[component], theme=f"{'{'}...eva.{theme}{'}'}"
+                children=[component], theme=js_utils.add_curls(f"...eva.{theme}")
             )
         return super().wrap(component, **kwargs)
 
@@ -125,13 +125,15 @@ class ContextWrapper(
     def wrap(
         self,
         component: Union[CompositeType, None],
-        state: Optional[BaseState] = None,
+        state: Optional[State] = None,
         is_functional: Optional[bool] = False,
         **kwargs,
     ) -> "App":
         """Checks and wraps component in provided wrappers, if configured.
 
         Args:
+            is_functional:
+            state:
             component (Composite): ...
 
         Returns:
@@ -144,7 +146,7 @@ class ContextWrapper(
                 }
             )
 
-        component = App(children=[super().wrap(component, **kwargs)])
+        component = App(children=[super().wrap(component, **kwargs)], state=state)
         extra_imports = {}
         if settings.USE_NAVIGATION:
             extra_imports.update(

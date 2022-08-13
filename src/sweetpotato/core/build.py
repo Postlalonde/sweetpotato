@@ -2,7 +2,8 @@
 The `_access_check` and `_check_dependency` functions are essentially copies from
 https://github.com/cookiecutter/whichcraft/blob/master/whichcraft.py#L20.
 
-Todo:
+Todos:
+    * Refactor + add platform command compatibility (windows, mac, etc).
     * Add docstrings for all classes & methods.
     * Add typing.
 """
@@ -87,7 +88,10 @@ class Build:
 
         Args:
             platform: Platform for app to be published on.
-            staging: Staging environment for app, default preview
+            staging: Staging environment for app, default preview.
+
+        Todos:
+            * Complete publishing logic for all platforms.
         """
         cmd = f"eas build -p {platform} --profile {staging}".split(" ")
 
@@ -104,7 +108,7 @@ class Build:
         with io.BytesIO() as script:
 
             def read(file_d) -> bytes:
-                """ "IO helper function."""
+                """IO helper function."""
                 data = os.read(file_d, 1024)
                 script.write(data)
                 return data
@@ -131,7 +135,7 @@ class Build:
 
     @staticmethod
     def __format_screens() -> None:
-        """Formats all .js files with the prettier package."""
+        """Formats all .js files with the prettier.js package."""
         try:
             subprocess.run(
                 f"cd {settings.REACT_NATIVE_PATH} && yarn prettier",
@@ -160,7 +164,7 @@ class Build:
         Returns:
             component: String representation of app component with placeholder values set.
 
-        Todo:
+        Todos:
             * Refactor this travesty.
         """
         if content["functional"]:
@@ -178,7 +182,6 @@ class Build:
         for key in content:
             if key == "props" and content[key]:
                 component = component.replace(f"<{key.upper()}>", "{props}")
-            print(key, content[key], screen)
             component = component.replace(f"<{key.upper()}>", str(content[key]))
         return component
 

@@ -1,11 +1,16 @@
 """Core functionality of React Native class based components."""
 import json
+import pathlib
 from functools import singledispatchmethod
 from typing import Optional, Union
 
 from sweetpotato.config import settings
-from sweetpotato.core import ThreadSafe
-from sweetpotato.core.base_management import BaseProps, BaseState
+from sweetpotato.core import ThreadSafe, js_utils
+from sweetpotato.core.base_management import (
+    Props,
+    State,
+    Function,
+)
 from sweetpotato.core.protocols import (
     ComponentVar,
     CompositeVar,
@@ -37,6 +42,7 @@ class Component:
     props: set = {
         "state",
         "props",
+        "style",
     }  #: Set of allowed props for component, default `'state'`, `'props'`.
     is_composite: bool = False  #: Indicates whether component may have inner content.
 
@@ -44,8 +50,8 @@ class Component:
         self,
         component_name: Optional[str] = None,
         children: Optional[str] = None,
-        state: Optional[BaseState] = BaseState(),
-        props: Optional[BaseProps] = BaseProps(),
+        state: Optional[State] = State(),
+        props: Optional[Props] = Props(),
         variables: Optional[list[str]] = None,
         **kwargs,
     ) -> None:
@@ -66,7 +72,7 @@ class Component:
         self._props = props
         self._variables = variables if variables else []
         self.parent = settings.APP_COMPONENT
-        self._attrs = kwargs
+        self._attrs = kwargs | {"state": self._state}
 
     @property
     def import_name(self) -> Optional[str]:
@@ -92,15 +98,18 @@ class Component:
         """Property string of given attributes for component"""
         return " ".join([self._format_attr(v, k) for k, v in self._attrs.items()])
 
-    def _make_attrs(self, attr: Union[BaseState, BaseProps]) -> str:
-        placeholder = "" if self.is_composite else "this."
+    def _make_state_or_prop_attrs(self, attr: Union[State, Props]) -> str:
+        placeholder = "" if self.is_composite else js_utils.add_this()
         attr_type = f"{placeholder}{attr.type}"
         return " ".join(
-            [f"{k}={'{'}{attr_type}.{k}{'}'}" for k, v in attr.values.items()]
+            [
+                self._make_key_w_attr(k, f"{attr_type}.{k}")
+                for k, v in attr.values.items()
+            ]
         )
 
     @singledispatchmethod
-    def _format_attr(self, attr, key) -> None:
+    def _format_attr(self, attr, key) -> AttributeError:
         """Generic method for formatting state, props & style.
 
         Args:
@@ -109,18 +118,27 @@ class Component:
         """
         raise AttributeError(f"{attr} {key} not in allowed types")
 
-    @_format_attr.register(BaseState)
-    @_format_attr.register(BaseProps)
-    def _(self, attr: Union[BaseState, BaseProps], _) -> str:
-        return self._make_attrs(attr)
+    @_format_attr.register(State)
+    @_format_attr.register(Props)
+    def _(self, attr: Union[State, Props], _) -> str:
+        return self._make_state_or_prop_attrs(attr)
+
+    @_format_attr.register(dict)
+    @_format_attr.register(Function)
+    def _(self, attr: Union[dict, Function], key: str) -> str:
+        return self._make_key_w_attr(key, attr)
 
     @_format_attr.register(str)
-    def _(self, attr: dict, key: str) -> str:
-        return f"{key}={'{'}{attr}{'}'}"
+    def _(self, attr: str, key: str):
+        return self._make_key_w_attr(key, f"`{attr}`")
 
-    @_format_attr.register
+    @_format_attr.register(bool)
     def _(self, attr: bool, key: str) -> str:
-        return f"{key}={'{'}{json.dumps(attr)}{'}'}"
+        return self._make_key_w_attr(key, json.dumps(attr))
+
+    @staticmethod
+    def _make_key_w_attr(key, attr) -> str:
+        return f"{key}={'{'}{attr}{'}'}"
 
     def _set_default_name(self) -> str:
         return self.__class__.__name__
@@ -156,7 +174,7 @@ class Composite(Component):
     def __init__(
         self,
         children: Optional[list[Union[ComponentVar, CompositeVar]]] = None,
-        functions: Optional[list[str]] = None,
+        functions: Optional[Union[list[str], str]] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -169,9 +187,44 @@ class Composite(Component):
         return "".join(map(repr, self._children))
 
     @property
-    def functions(self) -> Optional[str]:
+    def functions(self) -> str:
         """Property returning string of variables (if any) belonging to given component."""
         return "".join(self._functions)
+
+    @functions.setter
+    def functions(self, functions: Union[list[str], str]) -> None:
+        self._functions = self.function_formatter(functions)
+
+    @singledispatchmethod
+    def function_formatter(self, functions) -> None:
+        """Generic method for setting functions.
+
+        Args:
+            functions: List of functions or a string representing a file name.
+
+        Todos:
+            * Finish function_formatter methods.
+        """
+        raise KeyError("Argument for functions not in allowed types.")
+
+    @function_formatter.register
+    def _(self, functions: list) -> list:
+        return functions
+
+    @function_formatter.register
+    def _(self, functions: str) -> list:
+        path = pathlib.Path().resolve()
+        with open(f"./{path}/{functions}", "r") as file:
+            content = file.read()
+        return content.split("\n")
+
+    def check_functions(self, functions: list[str]) -> None:
+        """Checks .js functions for errors.
+
+        Args:
+            functions: List of .js functions represented as strings.
+        """
+        ...
 
     def __repr__(self) -> str:
         if self._children and self.is_composite:
@@ -188,18 +241,17 @@ class ComponentRegistry(metaclass=ThreadSafe):
 
     _registry = {}
 
-    @classmethod
     @property
-    def registry(cls):
+    def registry(self) -> dict:
         """
 
         Returns:
 
         """
-        return cls._registry
+        return self._registry
 
     @classmethod
-    def register(cls, component):
+    def register(cls, component) -> None:
         """
 
         Args:
@@ -222,7 +274,9 @@ class RootComponent(Composite):
     """
 
     is_composite = False  #: Indicates whether component is represented as composite inside parent component.
-    package_root: str = f"./{settings.SOURCE_FOLDER}/components"
+    package_root: str = (
+        f"./{settings.SOURCE_FOLDER}/components"  #: Default package for component.
+    )
     is_root: bool = True  #: Indicates whether component is a top level component.
     is_functional: bool = (
         False  #: Indicates whether component a functional or class component.
@@ -248,7 +302,7 @@ class RootComponent(Composite):
         ComponentRegistry.register(self)
 
     @property
-    def imports(self) -> Optional[str]:
+    def imports(self) -> str:
         """Property returning string of imports (if any) belonging to given component."""
         import_string = ""
         for key, value in self._imports.items():
@@ -262,8 +316,11 @@ class RootComponent(Composite):
         return import_string
 
     @property
-    def state(self) -> Optional[str]:
-        """Property returning json string of state (if any) belonging to given component."""
+    def state(self) -> str:
+        """Property returning json string of state (if any) belonging to given component.
+
+        Accesses underlying State instance, if available.
+        """
         return self._state.as_json()
 
     def _set_parent(self, children: list[Union[CompositeType, ComponentType]]) -> None:
@@ -271,6 +328,9 @@ class RootComponent(Composite):
 
         Args:
             children: List of components.
+
+        Todos:
+            * Refactor + don't access _children attribute for child.
         """
         for child in children:
             child.parent = self.component_name
@@ -310,18 +370,18 @@ class RootComponent(Composite):
         }
 
     @classmethod
-    def register(cls, obj: Union[BaseState, BaseProps]) -> None:
+    def register(cls, management_obj: Union[State, Props]) -> None:
         """Registers state/prop object as functional or class based.
 
         Args:
-            obj: State or Prop object.
+            management_obj: State or Prop object.
         """
-        obj.is_functional = cls.is_functional
+        management_obj.is_functional = cls.is_functional
 
 
 class App(RootComponent):
     """Expo entry class."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.package = f"{settings.REACT_NATIVE_PATH}/{self.import_name}.js"

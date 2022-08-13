@@ -6,7 +6,7 @@ Todos:
 from typing import Optional
 
 from sweetpotato.components import View
-from sweetpotato.core.base_management import BaseState
+from sweetpotato.core.base_management import State
 from sweetpotato.core.build import Build
 from sweetpotato.core.context_wrappers import ContextWrapper
 from sweetpotato.core.protocols import CompositeVar
@@ -44,7 +44,7 @@ class App:
         context: Optional[ContextWrapper] = ContextWrapper(),
         build: Optional[Build] = Build(),
         theme: Optional[str] = None,
-        state: Optional[BaseState] = None,
+        state: Optional[State] = None,
         **kwargs
     ) -> None:
         self._context = context
@@ -56,7 +56,7 @@ class App:
             **kwargs
         )
 
-    def run(self, platform: Optional[str] = None) -> None:
+    def run(self, platform: Optional[str] = "") -> None:
         """Starts a React Native expo client through a subprocess.
 
         Args:

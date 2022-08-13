@@ -7,6 +7,7 @@ See `React Navigation <https://reactnavigation.org/docs/getting-started/#>`_
 from typing import Optional
 
 from sweetpotato.config import settings
+from sweetpotato.core import js_utils
 from sweetpotato.core.base import Composite, RootComponent
 from sweetpotato.core.protocols import CompositeVar
 from sweetpotato.management import State
@@ -116,7 +117,9 @@ class BaseNavigator(Composite):
 
     def __init__(self, name: str = None, **kwargs) -> None:
         super().__init__(component_name=self._set_custom_name(name), **kwargs)
-        self._variables = [f"const {self.component_name} = {self.import_name}()"]
+        self._variables = [
+            js_utils.make_const(self.component_name, f"{self.import_name}()")
+        ]
         self.component_name = f"{self.component_name}.Navigator"
         self._children.append(RootNavigation())
 
