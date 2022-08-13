@@ -206,7 +206,7 @@ class State(_ProtocolState):
             is_functional=self.is_functional,
         )
         self.functions.append(f"{state_output} = ({name}New) => {state_function}")
-        var = function, js_utils.add_curls(class_state)
+        var = function, f"${js_utils.add_curls(class_state)}"
         return var
 
     def _set_functional_state(
@@ -220,16 +220,17 @@ class State(_ProtocolState):
             default_value: default for passed state key.
         """
         function_name = f"set{name.title()}"
-        state_output = f"const [{name}, {function_name}]"
         state_function = f"React.useState({json.dumps(default_value)});"
-        function_repr = f"{state_output} = {state_function}"
+        function_repr = js_utils.make_const(
+            f"[{name}, {function_name}]", state_function
+        )
         function = Function(
             value=f"{name} {incr_or_decr_val}",
             name=function_name,
             is_functional=self.is_functional,
         )
         self.functions.append(function_repr)
-        var = function, js_utils.add_curls(name)
+        var = function, f"${js_utils.add_curls(name)}"
         return var
 
     @staticmethod

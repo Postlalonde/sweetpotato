@@ -139,14 +139,12 @@ class ContextWrapper(
         Returns:
             Composite.
         """
-        if not state:
+        if not state and settings.USE_AUTHENTICATION:
             state = State(
                 {
                     "authenticated": False,
                 }
             )
-
-        component = App(children=[super().wrap(component, **kwargs)], state=state)
         extra_imports = {}
         if settings.USE_NAVIGATION:
             extra_imports.update(
@@ -162,4 +160,10 @@ class ContextWrapper(
                     "@ui-kitten/eva-icons": {"EvaIconsPack"},
                 }
             )
+        component = App(
+            children=[super().wrap(component, **kwargs)],
+            state=state,
+            extra_imports=extra_imports,
+        )
+        component.is_functional = is_functional
         return component

@@ -44,8 +44,9 @@ class App:
         context: Optional[ContextWrapper] = ContextWrapper(),
         build: Optional[Build] = Build(),
         theme: Optional[str] = None,
-        state: Optional[State] = None,
-        **kwargs
+        state: Optional[State] = State(),
+        is_functional: Optional[bool] = False,
+        **kwargs,
     ) -> None:
         self._context = context
         self._build = build
@@ -53,7 +54,8 @@ class App:
             component if component else default_screen(),
             theme=theme,
             state=state,
-            **kwargs
+            is_functional=is_functional,
+            **kwargs,
         )
 
     def run(self, platform: Optional[str] = "") -> None:
@@ -83,3 +85,13 @@ class App:
             String rendition of application in .js format.
         """
         return self._build.show()
+
+    def __repr__(self) -> str:
+        """
+        Todos:
+            * complete repr logic.
+
+        Returns:
+
+        """
+        return f"App({self.show()},)"

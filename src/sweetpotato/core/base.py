@@ -1,6 +1,7 @@
 """Core functionality of React Native class based components."""
 import json
 import pathlib
+import pickle
 from functools import singledispatchmethod
 from typing import Optional, Union
 
@@ -138,7 +139,7 @@ class Component:
 
     @staticmethod
     def _make_key_w_attr(key, attr) -> str:
-        return f"{key}={'{'}{attr}{'}'}"
+        return f"{key}={js_utils.add_curls(attr)}"
 
     def _set_default_name(self) -> str:
         return self.__class__.__name__
@@ -196,7 +197,7 @@ class Composite(Component):
         self._functions = self.function_formatter(functions)
 
     @singledispatchmethod
-    def function_formatter(self, functions) -> None:
+    def function_formatter(self, functions) -> KeyError:
         """Generic method for setting functions.
 
         Args:
@@ -207,11 +208,11 @@ class Composite(Component):
         """
         raise KeyError("Argument for functions not in allowed types.")
 
-    @function_formatter.register
+    @function_formatter.register(list)
     def _(self, functions: list) -> list:
         return functions
 
-    @function_formatter.register
+    @function_formatter.register(str)
     def _(self, functions: str) -> list:
         path = pathlib.Path().resolve()
         with open(f"./{path}/{functions}", "r") as file:
@@ -343,7 +344,7 @@ class RootComponent(Composite):
                 self._variables.append(child.variables)
                 self._set_parent(child._children)
 
-    def serialize(self, as_format: Optional[str] = "dict") -> dict:
+    def serialize(self, as_format: Optional[str] = "dict") -> Union[dict, bytes, str]:
         """Returns component as specified serialization format.
 
         Args:
@@ -351,14 +352,12 @@ class RootComponent(Composite):
 
         Returns:
             Serialized component.
-
-        Todos:
-            * Add formatting logic for json.
         """
-
-        if as_format == "json":
-            raise NotImplementedError
-        return {
+        if as_format not in ["dict", "json", "pickle"]:
+            raise KeyError(
+                f"{as_format} not in available formats, pass 'dict' or 'json'."
+            )
+        serialized_component = {
             "state": self.state,
             "variables": self.variables,
             "functions": self.functions,
@@ -368,6 +367,12 @@ class RootComponent(Composite):
             "functional": self.is_functional,
             "props": self.props,
         }
+
+        if as_format == "json":
+            return json.dumps(serialized_component)
+        if as_format == "pickle":
+            return pickle.dumps(serialized_component)
+        return serialized_component
 
     @classmethod
     def register(cls, management_obj: Union[State, Props]) -> None:

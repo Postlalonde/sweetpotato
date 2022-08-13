@@ -3,7 +3,8 @@ State
 
 To utilize state management in sweetpotato, initialize a :class:`~sweetpotato.management.State` object and register the
 instance with the desired class. To use hooks (read about hooks `here <https://reactjs.org/docs/hooks-intro.html>`_),
-call the :meth:`~sweetpotato.management.State.use_state` or :meth:`~sweetpotato.management.State.use_effect` methods, passing a name and default value.
+call the :meth:`~sweetpotato.core.base_management.State.use_state` or :meth:`~sweetpotato.core.base_management.State.use_effect` methods,
+passing a name and other optional arguments.
 
 
 :class:`~sweetpotato.management.State`
@@ -18,9 +19,9 @@ call the :meth:`~sweetpotato.management.State.use_state` or :meth:`~sweetpotato.
    class MyButton(RootComponent):
        pass
 
-   state = State({"pressed": False})
+   state = State({"pressed": 0})
    MyButton.register(state)
-   set_pressed, pressed = state.use_state(name="pressed", default_value=False)
+   set_pressed, pressed = state.use_state("pressed", increment=1)
 
 
    component = MyButton(
@@ -28,7 +29,8 @@ call the :meth:`~sweetpotato.management.State.use_state` or :meth:`~sweetpotato.
        children=[
            Button(
                title=f"Pressed: {pressed}",
-               onPress=f"() => {set_pressed}(!{pressed})")
+               onPress=set_pressed
+               )
            )
        ]
    )

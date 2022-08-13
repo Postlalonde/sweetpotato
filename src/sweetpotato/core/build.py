@@ -181,7 +181,7 @@ class Build:
             component = component.replace("default", "")
         for key in content:
             if key == "props" and content[key]:
-                component = component.replace(f"<{key.upper()}>", "{props}")
+                component = component.replace(f"<{key.upper()}>", "props")
             component = component.replace(f"<{key.upper()}>", str(content[key]))
         return component
 
